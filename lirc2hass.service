@@ -1,0 +1,15 @@
+## lirc2hass.service
+
+[Unit]
+Description=LIRC to Home Assistant event transceiver service
+Requires=inputlirc.service
+After=inputlirc.service
+
+[Service]
+Type=simple
+# User=lirc2hass  # uncomment to run as a non-root user
+# Group=input     # ensure the group has access to the LIRC socket
+ExecStart=/usr/local/bin/lirc2hass -v "$hass_base_url" -A "$hass_auth_token_file"
+
+[Install]
+WantedBy=multi-user.target
