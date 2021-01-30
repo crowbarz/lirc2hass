@@ -267,19 +267,25 @@ def main():
     elif log_level_count >= 1:
         log_level = logging.INFO
         log_level_name = "info"
-    try:
-        ## Catch SIGTERM and enable logging
-        logging.basicConfig(
-            level=log_level,
-            format="%(asctime)s %(levelname)s[%(threadName)s]: %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S",
-        )
-        _LOGGER.setLevel(log_level)
-        _LOGGER.info("setting log level to %s", log_level_name)
-        _LOGGER.debug("args: %s", args)
-        signal.signal(signal.SIGTERM, sigterm_handler)
 
-        ## Start main loop
+    ## Enable logging
+    log_format = "%(asctime)s %(levelname)s: %(message)s"
+    log_format_color = "%(log_color)s" + log_format
+    date_format = "%Y-%m-%d %H:%M:%S"
+    try:
+        import colorlog
+
+        colorlog.basicConfig(
+            level=log_level, format=log_format_color, datefmt=date_format
+        )
+    except:
+        logging.basicConfig(level=log_level, format=log_format, datefmt=date_format)
+    _LOGGER.info("setting log level to %s", log_level_name)
+    _LOGGER.debug("args: %s", args)
+
+    ## Catch SIGTERM and start main loop
+    signal.signal(signal.SIGTERM, sigterm_handler)
+    try:
         main_loop(args)
     except KeyboardInterrupt:
         _LOGGER.warning("Keyboard interrupt, exiting")
