@@ -77,7 +77,7 @@ class LircClient:
             self._sock.close()
             self._sock = None
 
-    def send_event(self, event):
+    def send_event(self, event, s):
         """Send an LIRC event to Home Assistant via the REST API."""
         event_timestamp = time.time()
         event_timedelta_ms = (event_timestamp - LircClient._last_event_timestamp) * 1000
@@ -97,7 +97,7 @@ class LircClient:
             _LOGGER.info(
                 "firing event: %s (+%dms)", lirc_key, round(event_timedelta_ms)
             )
-            rest_res = requests.post(
+            rest_res = s.post(
                 self._hass_url + "/api/events/" + EVENT_IR_COMMAND_RECEIVED,
                 headers=self._rest_headers,
                 data=rest_data,
@@ -109,21 +109,22 @@ class LircClient:
 
     def event_loop(self):
         """Main event loop."""
-        while True:
-            try:
-                ## Read a key event from the socket
-                event = self._sock.recv(SOCK_BUFSIZE)
-                _LOGGER.debug("received LIRC event: '%s'", event)
-            except OSError as e:
-                ## Socket error, mark disconnected
-                _LOGGER.error("could not read from LIRC: %s", e)
-                raise LircDisconnected
+        with requests.Session() as s:
+            while True:
+                try:
+                    ## Read a key event from the socket
+                    event = self._sock.recv(SOCK_BUFSIZE)
+                    _LOGGER.debug("received LIRC event: '%s'", event)
+                except OSError as e:
+                    ## Socket error, mark disconnected
+                    _LOGGER.error("could not read from LIRC: %s", e)
+                    raise LircDisconnected
 
-            if event:
-                self.send_event(event)  ## Send event to Home Assistant
-            else:
-                _LOGGER.error(f"empty event received from LIRC, reconnecting")
-                raise LircDisconnected
+                if event:
+                    self.send_event(event, s)  ## Send event to Home Assistant
+                else:
+                    _LOGGER.error(f"empty event received from LIRC, reconnecting")
+                    raise LircDisconnected
 
 
 def get_backoff_delay(retry_count, delay_max):
