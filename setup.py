@@ -24,8 +24,8 @@ setuptools.setup(
         "Topic :: Multimedia",
     ],
     keywords="lirc hass mce logitech harmony inputlirc home assistant rest",
-    python_requires=">=3.6",
-    install_requires=["requests"],
+    python_requires=">=3.9",
+    install_requires=["requests", "websockets"],
     entry_points={
         "console_scripts": [
             "lirc2hass=lirc2hass.lirc2hass:main",
